@@ -833,7 +833,7 @@ body{font-weight:400}
 
   // RSVP + transport -> Google Sheet via Apps Script web app
   (function(){
-    var URL="__SCRIPT_URL__",f=document.getElementById("busf"),go=document.getElementById("busgo"),ph=document.getElementById("busp"),msg=document.getElementById("busmsg"),bx=document.getElementById("busx");
+    var URL="https://script.google.com/macros/s/AKfycbz9Jy4fJSi1xnmwgiZEAX5erMRbFWUwPtKyZ9Udefn1tq7CAoy_k6pnPzWsYi1rljEL/exec",f=document.getElementById("busf"),go=document.getElementById("busgo"),ph=document.getElementById("busp"),msg=document.getElementById("busmsg"),bx=document.getElementById("busx");
     function row(){var m=(location.hash||"").match(/-r(\d+)$/);return m?m[1]:""}
     function v(n){var r=f.querySelector("input[name="+n+"]:checked");return r?r.value:""}
     function xv(){var d=f.querySelector("input[value=di]").checked,e=f.querySelector("input[value=ve]").checked,t=f.querySelector("input[value=tu]").checked;
