@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yu-Gi-Oh! Duel</title>
+<style>
+:root{--cw:84px;--ch:118px;--sw:122px;--gold:#e8c14d;--bg:#0d0b1a;--panel:#1a1630;--line:#3a3260}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(ellipse at top,#241c4a,#0d0b1a 70%);color:#eee;font-family:system-ui,Segoe UI,Roboto,sans-serif;min-height:100vh}
+#app{max-width:860px;margin:0 auto;padding:8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.bar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.bar .who{font-weight:700;min-width:64px}
+.lpwrap{flex:1;height:14px;background:#000;border-radius:7px;overflow:hidden;border:1px solid var(--line)}
+.lpfill{height:100%;background:linear-gradient(90deg,#c0392b,#f1c40f);transition:width .6s}
+.lpnum{font-variant-numeric:tabular-nums;font-weight:700;min-width:54px;text-align:right;color:var(--gold)}
+.meta{font-size:12px;opacity:.75;white-space:nowrap}
+.hand{display:flex;gap:6px;min-height:calc(var(--ch) + 8px);overflow-x:auto;padding:12px 4px 4px;justify-content:center}
+.field{display:flex;justify-content:center;gap:4px}
+.slot{width:var(--sw);height:var(--sw);border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);position:relative;flex:0 0 auto}
+.slot.hl{border-color:#ff5252;box-shadow:0 0 12px #ff5252;cursor:pointer}
+.slot.sel{border-color:var(--gold);box-shadow:0 0 12px var(--gold)}
+.card{width:var(--cw);height:var(--ch);border-radius:6px;border:2px solid #000;padding:4px;display:flex;flex-direction:column;justify-content:space-between;font-size:11px;line-height:1.15;cursor:pointer;flex:0 0 auto;transition:transform .2s;position:relative;color:#111}
+.card .nm{font-weight:700;font-size:11px;overflow:hidden;max-height:3.5em}
+.card .lv{font-size:10px;opacity:.8}
+.card .st{font-weight:700;font-size:11px;text-align:center;background:rgba(255,255,255,.55);border-radius:3px;padding:1px 0}
+.card.attr-dark{background:linear-gradient(160deg,#a58bd0,#5b4393)}
+.card.attr-light{background:linear-gradient(160deg,#fff3b0,#e0b84a)}
+.card.attr-earth{background:linear-gradient(160deg,#d6b27a,#9c7440)}
+.card.attr-fire{background:linear-gradient(160deg,#ff9e7a,#c9452a)}
+.card.attr-water{background:linear-gradient(160deg,#9fd3ff,#3b7fc4)}
+.card.spell{background:linear-gradient(160deg,#9be3b4,#2f9a68)}
+.card.back{background:repeating-linear-gradient(45deg,#4a2a14,#4a2a14 6px,#6b3f1d 6px,#6b3f1d 12px);border-color:#c9a14a;color:transparent}
+.card.def{transform:rotate(90deg)}
+.card.down.mine{opacity:.72;outline:2px dashed #fff8}
+.card.picked{outline:3px solid var(--gold);transform:translateY(-8px)}
+.card.def.picked{transform:rotate(90deg) translateY(-8px)}
+.card.bonus .st{color:#a00}
+.card.dead{animation:dead .5s forwards}
+@keyframes dead{to{opacity:0;transform:scale(.6) rotate(20deg)}}
+.mid{display:flex;gap:8px;flex-wrap:wrap}
+.log{flex:1 1 300px;height:112px;overflow-y:auto;background:#0008;border:1px solid var(--line);border-radius:8px;padding:6px;font-size:12px;line-height:1.35}
+.log div:last-child{color:var(--gold)}
+.info{flex:1 1 220px;min-height:112px;background:#0008;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px}
+.info b{color:var(--gold)}
+.ctrl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ctrl .phase{font-weight:700;color:var(--gold);margin-right:auto}
+button{background:#3b2f78;color:#fff;border:1px solid #6a5bc2;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}
+button:hover:not(:disabled){background:#5846b0}
+button:disabled{opacity:.4;cursor:default}
+button.danger{background:#7a2a2a;border-color:#c25b5b}
+#actions{display:flex;gap:6px;flex-wrap:wrap;min-height:38px;align-items:center}
+#actions .hint{font-size:12px;opacity:.8}
+.ov{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:10;padding:16px}
+.ov.hidden{display:none}
+.box{background:var(--panel);border:2px solid var(--gold);border-radius:14px;padding:20px;max-width:420px;width:100%;text-align:center;max-height:90vh;overflow:auto}
+.box h2{margin:0 0 10px;color:var(--gold)}
+.box button{display:block;width:100%;margin:6px 0}
+.box p{font-size:13px;line-height:1.5;text-align:left}
+#toast{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);background:#000c;border:2px solid var(--gold);padding:12px 22px;border-radius:12px;font-size:18px;font-weight:700;color:var(--gold);z-index:9;pointer-events:none;opacity:0;transition:opacity .25s;text-align:center}
+#toast.show{opacity:1}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.flash{animation:flash .5s}
+@keyframes flash{50%{background:#a33}}
+@media(max-width:620px){:root{--cw:50px;--ch:72px;--sw:68px}.card{font-size:8px;padding:2px}.card .nm,.card .st,.card .lv{font-size:8px}.hand{justify-content:flex-start}.meta{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bar" id="barO"><span class="who">Đối thủ</span><div class="lpwrap"><div class="lpfill" id="fillO"></div></div><span class="lpnum" id="lpO">8000</span><span class="meta" id="metaO"></span></div>
+  <div class="hand" id="handO"></div>
+  <div class="field" id="fieldO"></div>
+  <div class="ctrl"><span class="phase" id="phase"></span><button id="btnBattle">⚔ Battle Phase</button><button id="btnEnd" class="danger">Kết thúc lượt</button></div>
+  <div class="field" id="fieldP"></div>
+  <div id="actions"></div>
+  <div class="hand" id="handP"></div>
+  <div class="bar" id="barP"><span class="who">Bạn</span><div class="lpwrap"><div class="lpfill" id="fillP"></div></div><span class="lpnum" id="lpP">8000</span><span class="meta" id="metaP"></span></div>
+  <div class="mid"><div class="log" id="log"></div><div class="info" id="info">Di chuột / chọn một lá bài để xem chi tiết.</div></div>
+</div>
+
+<div id="toast"></div>
+
+<div class="ov" id="start"><div class="box">
+  <h2>🃏 Yu-Gi-Oh! Duel</h2>
+  <p><b>Luật rút gọn:</b><br>
+  • Mỗi bên 8000 LP, rút 5 lá, bộ bài 32 lá. Hết LP hoặc hết bài là thua.<br>
+  • Mỗi lượt được <b>triệu hồi/úp 1 quái vật</b>. Lv5–6 cần hiến tế 1, Lv7+ cần hiến tế 2.<br>
+  • Quái vật <b>úp</b> luôn ở thế thủ. Đổi tư thế 1 lần/lượt (không áp dụng lượt vừa triệu hồi).<br>
+  • Battle Phase: quái vật ngửa tư thế tấn công có thể đánh. Người đi trước <b>không được đánh ở lượt 1</b>.<br>
+  • Đánh quái thế thủ: ATK &gt; DEF thì phá huỷ; ATK &lt; DEF thì bạn mất LP chênh lệch.<br>
+  • Tối đa 6 lá trên tay khi kết thúc lượt.</p>
+  <button id="btnStart">Bắt đầu Duel!</button>
+</div></div>
+
+<div class="ov hidden" id="modal"><div class="box"><h2 id="mTitle"></h2><div id="mList"></div></div></div>
+<div class="ov hidden" id="over"><div class="box"><h2 id="oTitle"></h2><p id="oText" style="text-align:center"></p><button onclick="location.reload()">Chơi lại</button></div></div>
+
+<script>
+'use strict';
+const AUTO = location.hash==='#auto';        // chế độ tự chơi để kiểm thử
+const $=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,AUTO?5:ms));
+const other=s=>s==='p'?'o':'p';
+const NAMES={p:'Bạn',o:'Đối thủ'};
+let uid=0;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---------- Dữ liệu bài ---------- */
+const MON=[
+ ['Blue-Eyes White Dragon',3000,2500,8,'light','Rồng'],
+ ['Dark Magician',2500,2100,7,'dark','Pháp sư'],
+ ['Red-Eyes Black Dragon',2400,2000,7,'dark','Rồng'],
+ ['Gaia The Fierce Knight',2300,2100,7,'earth','Chiến binh'],
+ ['Summoned Skull',2500,1200,6,'dark','Quỷ'],
+ ['Curse of Dragon',2000,1500,5,'dark','Rồng'],
+ ['Flame Swordsman',1800,1600,5,'fire','Chiến binh'],
+ ['Celtic Guardian',1400,1200,4,'earth','Chiến binh'],
+ ['Gemini Elf',1900,900,4,'earth','Tiên'],
+ ['Battle Ox',1700,1000,4,'earth','Thú-Chiến binh'],
+ ['Axe Raider',1700,1150,4,'earth','Chiến binh'],
+ ['Dark Blade',1800,1500,4,'dark','Chiến binh'],
+ ['Beaver Warrior',1200,1500,4,'earth','Thú-Chiến binh'],
+ ['Big Shield Gardna',100,2600,4,'earth','Chiến binh'],
+ ['Mystical Elf',800,2000,4,'light','Pháp sư'],
+ ['Giant Soldier of Stone',1300,2000,3,'earth','Đá'],
+ ['Silver Fang',1200,800,3,'earth','Thú'],
+ ['Mammoth Graveyard',1200,800,3,'earth','Khủng long'],
+ ['Feral Imp',1300,1400,4,'dark','Quỷ'],
+ ['Kuriboh',300,200,1,'dark','Quỷ']
+];
+const SP={
+ pot:{n:'Pot of Greed',t:'Rút 2 lá bài.'},
+ raigeki:{n:'Raigeki',t:'Phá huỷ tất cả quái vật của đối thủ.'},
+ dark:{n:'Dark Hole',t:'Phá huỷ tất cả quái vật trên sân (cả hai bên).'},
+ reborn:{n:'Monster Reborn',t:'Triệu hồi đặc biệt 1 quái vật từ nghĩa địa của bất kỳ ai, ở tư thế tấn công.'},
+ dian:{n:'Dian Keto the Cure Master',t:'Hồi 1000 LP.'},
+ fissure:{n:'Fissure',t:'Phá huỷ quái vật ngửa có ATK thấp nhất của đối thủ.'},
+ book:{n:'Book of Secret Arts',t:'Một quái vật của bạn nhận +300 ATK/DEF vĩnh viễn.'}
+};
+const mkMon=r=>({id:++uid,type:'m',name:r[0],atk:r[1],def:r[2],lv:r[3],attr:r[4],race:r[5]});
+const mkSp=k=>({id:++uid,type:'s',key:k,name:SP[k].n,txt:SP[k].t});
+function buildDeck(){
+  const d=MON.map(mkMon);
+  shuffle(MON.filter(r=>r[3]<=4).slice()).slice(0,4).forEach(r=>d.push(mkMon(r)));
+  ['pot','raigeki','dark','reborn','dian','fissure','book','book'].forEach(k=>d.push(mkSp(k)));
+  return shuffle(d);
+}
+const tribNeed=c=>c.lv>=7?2:c.lv>=5?1:0;
+
+/* ---------- Trạng thái ---------- */
+const mkSide=()=>({lp:8000,deck:buildDeck(),hand:[],field:[null,null,null,null,null],gy:[]});
+const S={p:mkSide(),o:mkSide(),cur:'p',phase:'',turn:0,summoned:false,over:false};
+const UI={sel:null,mode:null,need:0,tribs:[],pend:null,busy:true,modal:false};
+const atkOf=m=>m.c.atk+m.bonus, defOf=m=>m.c.def+m.bonus;
+const monsters=side=>S[side].field.map((m,i)=>m?{m,i}:null).filter(Boolean);
+
+function log(t){const d=document.createElement('div');d.textContent=t;const l=$('#log');l.appendChild(d);l.scrollTop=l.scrollHeight}
+let toastT;function toast(t,ms=1100){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),ms)}
+function pick(title,labels){return new Promise(res=>{
+  UI.modal=true;$('#mTitle').textContent=title;const L=$('#mList');L.innerHTML='';
+  labels.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{$('#modal').classList.add('hidden');UI.modal=false;res(i)};L.appendChild(b)});
+  $('#modal').classList.remove('hidden');
+})}
+
+/* ---------- Hiển thị ---------- */
+function infoOf(c,m){
+  if(!c){return''}
+  if(c.type==='s')return `<b>${c.name}</b><br>Bài Phép<br>${c.txt}`;
+  let s=`<b>${c.name}</b><br>Lv${c.lv} · ${c.attr.toUpperCase()} · ${c.race}<br>ATK ${c.atk+(m?m.bonus:0)} / DEF ${c.def+(m?m.bonus:0)}`;
+  const t=tribNeed(c);if(t)s+=`<br>Cần hiến tế ${t} quái vật.`;
+  return s;
+}
+const showInfo=(c,m)=>{$('#info').innerHTML=infoOf(c,m)||'Chọn một lá bài để xem chi tiết.'};
+function cardEl(c,opt={}){
+  const d=document.createElement('div');
+  if(opt.back){d.className='card back';d.textContent='.';return d}
+  d.className='card '+(c.type==='s'?'spell':'attr-'+c.attr);
+  if(c.type==='s'){d.innerHTML=`<div class="nm">${c.name}</div><div class="lv">PHÉP</div><div class="st">✦</div>`}
+  else{
+    const b=opt.m?opt.m.bonus:0;
+    d.innerHTML=`<div class="nm">${c.name}</div><div class="lv">Lv${c.lv}</div><div class="st">${c.atk+b}/${c.def+b}</div>`;
+    if(b)d.classList.add('bonus');
+  }
+  return d;
+}
+function slotEl(side,i){
+  const m=S[side].field[i];const s=document.createElement('div');s.className='slot';
+  if(m){
+    let e;
+    if(m.down&&side==='o'){e=cardEl(null,{back:true})}
+    else{e=cardEl(m.c,{m});if(m.down){e.classList.add('down','mine')}}
+    if(m.pos==='def')e.classList.add('def');
+    s.appendChild(e);
+    e.onmouseenter=()=>{if(!(m.down&&side==='o'))showInfo(m.c,m)};
+  }
+  if(UI.mode==='target'&&side==='o'&&m)s.classList.add('hl');
+  if(UI.mode==='tribute'&&side==='p'&&m)s.classList.add('hl');
+  if(UI.mode==='tribute'&&UI.tribs.includes(i)&&side==='p')s.classList.add('sel');
+  if(UI.sel&&UI.sel.k==='m'&&UI.sel.i===i&&side==='p')s.classList.add('sel');
+  s.onclick=()=>onSlot(side,i);
+  return s;
+}
+function render(){
+  for(const s of ['p','o']){
+    const k=s==='p'?'P':'O',x=S[s];
+    $('#lp'+k).textContent=x.lp;$('#fill'+k).style.width=Math.max(0,x.lp/8000*100)+'%';
+    $('#meta'+k).textContent=`Bài: ${x.deck.length} · Tay: ${x.hand.length} · Nghĩa địa: ${x.gy.length}`;
+    const F=$('#field'+k);F.innerHTML='';for(let i=0;i<5;i++)F.appendChild(slotEl(s,i));
+  }
+  const HO=$('#handO');HO.innerHTML='';S.o.hand.forEach(()=>HO.appendChild(cardEl(null,{back:true})));
+  const HP=$('#handP');HP.innerHTML='';
+  S.p.hand.forEach((c,i)=>{
+    const e=cardEl(c);if(UI.sel&&UI.sel.k==='h'&&UI.sel.i===i)e.classList.add('picked');
+    e.onclick=()=>onHand(i);e.onmouseenter=()=>showInfo(c);HP.appendChild(e);
+  });
+  const names={draw:'Draw Phase',main:'Main Phase',battle:'Battle Phase',end:'End Phase'};
+  $('#phase').textContent=`Lượt ${S.turn} · ${S.cur==='p'?'Bạn':'Đối thủ'} · ${names[S.phase]||''}`;
+  const myMain=canAct()&&S.phase==='main';
+  $('#btnBattle').disabled=!(myMain&&S.turn>1);
+  $('#btnEnd').disabled=!(canAct()&&(S.phase==='main'||S.phase==='battle'));
+  buildActions();
+}
+const canAct=()=>S.cur==='p'&&!UI.busy&&!S.over&&!UI.modal;
+
+/* ---------- Thao tác người chơi ---------- */
+function cancelUI(keepSel){UI.mode=null;UI.need=0;UI.tribs=[];UI.pend=null;if(!keepSel)UI.sel=null}
+function canSummon(side,c){
+  const me=S[side],t=tribNeed(c);
+  if(S.summoned)return false;
+  const n=monsters(side).length;
+  return t<=n&&(t>0||n<5);
+}
+function canCast(side,c){
+  const me=S[side],op=S[other(side)];
+  switch(c.key){
+    case 'pot':return me.deck.length>=2;
+    case 'raigeki':return monsters(other(side)).length>0;
+    case 'dark':return monsters('p').length+monsters('o').length>0;
+    case 'reborn':return monsters(side).length<5&&(me.gy.some(x=>x.type==='m')||op.gy.some(x=>x.type==='m'));
+    case 'dian':return true;
+    case 'fissure':return monsters(other(side)).some(x=>!x.m.down);
+    case 'book':return monsters(side).length>0;
+  }
+}
+const canAtk=m=>!m.down&&m.pos==='atk'&&!m.attacked&&S.turn>1;
+const canMove=m=>!m.fresh&&!m.moved&&!m.attacked;
+
+function buildActions(){
+  const a=$('#actions');a.innerHTML='';
+  const add=(t,f,dis,cls)=>{const b=document.createElement('button');b.textContent=t;b.onclick=f;b.disabled=!!dis;if(cls)b.className=cls;a.appendChild(b)};
+  const hint=t=>{const h=document.createElement('span');h.className='hint';h.textContent=t;a.appendChild(h)};
+  if(!canAct())return;
+  if(UI.mode==='tribute'){hint(`Chọn ${UI.need} quái vật của bạn để hiến tế (${UI.tribs.length}/${UI.need})`);add('Huỷ',()=>{cancelUI();render()});return}
+  if(UI.mode==='target'){hint('Chọn quái vật đối thủ để tấn công');add('Huỷ',()=>{cancelUI(true);render()});return}
+  if(!UI.sel){hint(S.phase==='main'?'Chọn lá bài trên tay hoặc quái vật trên sân.':'Chọn quái vật để tấn công.');return}
+  if(UI.sel.k==='h'&&S.phase==='main'){
+    const c=S.p.hand[UI.sel.i];if(!c)return;
+    if(c.type==='m'){
+      const ok=canSummon('p',c),t=tribNeed(c);
+      add(t?`Hiến tế ${t} & Triệu hồi`:'Triệu hồi (tấn công)',()=>startSummon(false),!ok);
+      add(t?`Hiến tế ${t} & Úp (thủ)`:'Úp (thủ)',()=>startSummon(true),!ok);
+      if(!ok)hint(S.summoned?'Đã triệu hồi lượt này.':'Không đủ quái vật để hiến tế / hết ô.');
+    }else{
+      add('Kích hoạt',()=>castP(),!canCast('p',c));
+      if(!canCast('p',c))hint('Không thể kích hoạt lúc này.');
+    }
+  }
+  if(UI.sel.k==='m'){
+    const m=S.p.field[UI.sel.i];if(!m)return;
+    if(S.phase==='main'){
+      add(m.down?'Lật ngửa (tấn công)':m.pos==='atk'?'Đổi sang thủ':'Đổi sang tấn công',()=>changePos('p',UI.sel.i),!canMove(m));
+      if(!canMove(m))hint('Không thể đổi tư thế lúc này.');
+    }
+    if(S.phase==='battle'){
+      if(canAtk(m)){
+        if(monsters('o').length)add('Tấn công',()=>{UI.mode='target';render()});
+        else add('Đòn trực tiếp!',()=>runAttack(UI.sel.i,null));
+      }else hint('Quái vật này không thể tấn công.');
+    }
+  }
+}
+function onHand(i){
+  if(!canAct()||S.phase!=='main')return;
+  cancelUI();UI.sel={k:'h',i};showInfo(S.p.hand[i]);render();
+}
+function onSlot(side,i){
+  const m=S[side].field[i];
+  if(m&&!(m.down&&side==='o'))showInfo(m.c,m);
+  if(!canAct())return;
+  if(UI.mode==='tribute'&&side==='p'&&m){
+    const k=UI.tribs.indexOf(i);if(k>=0)UI.tribs.splice(k,1);else UI.tribs.push(i);
+    if(UI.tribs.length===UI.need){finishSummon();return}
+    render();return;
+  }
+  if(UI.mode==='target'&&side==='o'&&m){const from=UI.sel.i;cancelUI();runAttack(from,i);return}
+  if(side==='p'&&m){cancelUI();UI.sel={k:'m',i};render()}
+}
+function startSummon(set){
+  const c=S.p.hand[UI.sel.i],t=tribNeed(c);
+  UI.pend={hi:UI.sel.i,set};
+  if(t===0){doSummon('p',UI.pend.hi,[],set);cancelUI();render();return}
+  UI.mode='tribute';UI.need=t;UI.tribs=[];render();
+}
+function finishSummon(){
+  const {hi,set}=UI.pend,tr=UI.tribs.slice();cancelUI();
+  doSummon('p',hi,tr,set);render();
+}
+async function castP(){
+  const hi=UI.sel.i;cancelUI();UI.busy=true;render();
+  await castSpell('p',hi);
+  if(!S.over)UI.busy=false;render();
+}
+async function runAttack(as,ts){
+  UI.busy=true;UI.sel=null;render();
+  await attack('p',as,ts);
+  if(!S.over)UI.busy=false;render();
+}
+$('#btnBattle').onclick=()=>{if(!canAct())return;cancelUI();S.phase='battle';log('— Battle Phase —');render()};
+$('#btnEnd').onclick=()=>{if(!canAct())return;cancelUI();endTurn('p')};
+
+/* ---------- Luật chơi (dùng chung cho cả hai bên) ---------- */
+function draw(side,n){
+  const x=S[side];
+  for(let k=0;k<n;k++){
+    if(!x.deck.length){gameOver(other(side),`${NAMES[side]} hết bài để rút!`);return false}
+    x.hand.push(x.deck.pop());
+  }
+  return true;
+}
+function destroy(side,i){
+  const m=S[side].field[i];if(!m)return;
+  S[side].gy.push(m.c);S[side].field[i]=null;
+}
+function dmg(side,n){
+  if(n<=0)return;
+  S[side].lp=Math.max(0,S[side].lp-n);
+  const bar=$('#bar'+(side==='p'?'P':'O'));bar.classList.remove('shake');void bar.offsetWidth;bar.classList.add('shake');
+  checkEnd();
+}
+function heal(side,n){S[side].lp+=n}
+function checkEnd(){
+  if(S.over)return;
+  const a=S.p.lp<=0,b=S.o.lp<=0;
+  if(a&&b)gameOver(null,'Cả hai cùng về 0 LP!');
+  else if(a)gameOver('o','LP của bạn về 0.');
+  else if(b)gameOver('p','LP của đối thủ về 0.');
+}
+function gameOver(winner,why){
+  if(S.over)return;S.over=true;
+  $('#oTitle').textContent=winner==='p'?'🏆 BẠN THẮNG!':winner==='o'?'💀 Bạn thua...':'Hoà!';
+  $('#oText').textContent=why;
+  log('=== '+$('#oTitle').textContent+' '+why);
+  setTimeout(()=>$('#over').classList.remove('hidden'),AUTO?0:900);
+  render();
+}
+function doSummon(side,hi,tribs,set){
+  const me=S[side],c=me.hand[hi];me.hand.splice(hi,1);
+  tribs.forEach(i=>{log(`${NAMES[side]} hiến tế ${me.field[i].c.name}.`);destroy(side,i)});
+  const slot=me.field.findIndex(x=>!x);
+  me.field[slot]={c,pos:set?'def':'atk',down:set,bonus:0,attacked:false,moved:false,fresh:true};
+  S.summoned=true;
+  log(set?`${NAMES[side]} úp một quái vật xuống thế thủ.`:`${NAMES[side]} triệu hồi ${c.name} (ATK ${c.atk}).`);
+}
+function changePos(side,i){
+  const m=S[side].field[i];m.moved=true;
+  if(m.down){m.down=false;m.pos='atk';log(`${NAMES[side]} lật ngửa ${m.c.name} (tấn công)!`)}
+  else{m.pos=m.pos==='atk'?'def':'atk';log(`${NAMES[side]} đổi ${m.c.name} sang ${m.pos==='atk'?'tấn công':'phòng thủ'}.`)}
+  if(side==='p'){UI.sel=null;render()}
+}
+async function castSpell(side,hi){
+  const me=S[side],op=S[other(side)],c=me.hand[hi];
+  const auto=side==='o'||AUTO;
+  let target=null;
+  if(c.key==='reborn'){
+    const cands=[];
+    ['p','o'].forEach(s=>S[s].gy.forEach((g,gi)=>{if(g.type==='m')cands.push({s,gi,g})}));
+    if(auto){cands.sort((a,b)=>b.g.atk-a.g.atk);target=cands[0]}
+    else{const k=await pick('Monster Reborn — chọn quái vật hồi sinh',cands.map(x=>`${x.g.name} (${x.g.atk}/${x.g.def}) · nghĩa địa ${x.s==='p'?'của bạn':'đối thủ'}`));target=cands[k]}
+  }
+  if(c.key==='book'){
+    const cands=monsters(side);
+    if(auto){cands.sort((a,b)=>atkOf(b.m)-atkOf(a.m));target=cands[0].i}
+    else{const k=await pick('Book of Secret Arts — chọn quái vật',cands.map(x=>`${x.m.c.name} (${atkOf(x.m)}/${defOf(x.m)})`));target=cands[k].i}
+  }
+  me.hand.splice(hi,1);me.gy.push(c);
+  log(`${NAMES[side]} kích hoạt ${c.name}.`);toast(`${c.name}`);
+  switch(c.key){
+    case 'pot':draw(side,2);break;
+    case 'raigeki':monsters(other(side)).forEach(x=>destroy(other(side),x.i));break;
+    case 'dark':['p','o'].forEach(s=>monsters(s).forEach(x=>destroy(s,x.i)));break;
+    case 'reborn':{
+      const g=S[target.s].gy.splice(target.gi,1)[0];
+      const slot=me.field.findIndex(x=>!x);
+      me.field[slot]={c:g,pos:'atk',down:false,bonus:0,attacked:false,moved:false,fresh:true};
+      log(`${NAMES[side]} hồi sinh ${g.name}!`);break;}
+    case 'dian':heal(side,1000);log(`${NAMES[side]} hồi 1000 LP.`);break;
+    case 'fissure':{
+      const t=monsters(other(side)).filter(x=>!x.m.down).sort((a,b)=>atkOf(a.m)-atkOf(b.m))[0];
+      log(`${t.m.c.name} bị phá huỷ.`);destroy(other(side),t.i);break;}
+    case 'book':{const m=me.field[target];m.bonus+=300;log(`${m.c.name} tăng +300 ATK/DEF.`);break;}
+  }
+  render();await sleep(900);
+}
+async function attack(side,as,ts){
+  const me=S[side],od=other(side),op=S[od],a=me.field[as];
+  a.attacked=true;const an=atkOf(a);
+  if(ts===null){
+    log(`${NAMES[side]}: ${a.c.name} tấn công trực tiếp! −${an} LP`);toast(`${a.c.name} tấn công trực tiếp!`);
+    await sleep(500);dmg(od,an);
+  }else{
+    const t=op.field[ts];
+    toast(`${a.c.name} ▶ ${t.down?'quái úp':t.c.name}`);await sleep(600);
+    if(t.down){t.down=false;log(`Lật bài: ${t.c.name} (${t.c.atk}/${t.c.def})`);render();await sleep(500)}
+    if(t.pos==='atk'){
+      const tn=atkOf(t);
+      if(an>tn){log(`${a.c.name} (${an}) phá huỷ ${t.c.name} (${tn}). ${NAMES[od]} mất ${an-tn} LP.`);destroy(od,ts);dmg(od,an-tn)}
+      else if(an<tn){log(`${a.c.name} (${an}) bị ${t.c.name} (${tn}) đánh bại. ${NAMES[side]} mất ${tn-an} LP.`);destroy(side,as);dmg(side,tn-an)}
+      else{log(`${a.c.name} và ${t.c.name} cùng bị phá huỷ.`);destroy(od,ts);destroy(side,as)}
+    }else{
+      const td=defOf(t);
+      if(an>td){log(`${a.c.name} (${an}) phá huỷ ${t.c.name} (DEF ${td}).`);destroy(od,ts)}
+      else if(an<td){log(`${a.c.name} (${an}) không xuyên nổi DEF ${td}. ${NAMES[side]} mất ${td-an} LP.`);dmg(side,td-an)}
+      else log(`${a.c.name} và ${t.c.name} (DEF) hoà, không ai bị phá huỷ.`);
+    }
+  }
+  render();await sleep(700);
+}
+
+/* ---------- Lượt chơi ---------- */
+async function startTurn(side){
+  if(S.over)return;
+  S.cur=side;S.turn++;S.summoned=false;UI.busy=true;cancelUI();
+  S[side].field.forEach(m=>{if(m){m.attacked=false;m.moved=false;m.fresh=false}});
+  S.phase='draw';render();
+  log(`=== Lượt ${S.turn}: ${NAMES[side]} ===`);
+  if(S.turn>1){if(!draw(side,1))return;log(`${NAMES[side]} rút 1 lá.`)}
+  render();await sleep(500);if(S.over)return;
+  S.phase='main';render();
+  if(side==='o'||AUTO){await aiTurn(side)}
+  else{UI.busy=false;toast('Lượt của bạn!');render()}
+}
+async function endTurn(side){
+  UI.busy=true;S.phase='end';render();
+  while(S[side].hand.length>6){
+    let k;
+    if(side==='p'&&!AUTO)k=await pick('Quá 6 lá — chọn lá để bỏ',S.p.hand.map(c=>c.name));
+    else{k=S[side].hand.map((c,i)=>({c,i})).sort((a,b)=>(a.c.type==='m'?a.c.atk:9999)-(b.c.type==='m'?b.c.atk:9999))[0].i}
+    const c=S[side].hand.splice(k,1)[0];S[side].gy.push(c);log(`${NAMES[side]} bỏ ${c.name}.`);render();
+  }
+  await sleep(300);
+  startTurn(other(side));
+}
+
+/* ---------- AI (dùng cho Đối thủ; ở chế độ #auto dùng cho cả Bạn) ---------- */
+function oppThreat(side){
+  const o=monsters(other(side));
+  return o.reduce((mx,x)=>Math.max(mx,x.m.down?1500:(x.m.pos==='atk'?atkOf(x.m):0)),0);
+}
+function aiWants(side,c){
+  const me=S[side],oN=monsters(other(side)).length,mN=monsters(side).length;
+  switch(c.key){
+    case 'pot':return true;
+    case 'dian':return me.lp<=7000;
+    case 'raigeki':return oN>=2||(oN>=1&&mN===0);
+    case 'dark':return oN>mN+0&&oN>=2;
+    case 'reborn':return me.gy.concat(S[other(side)].gy).some(x=>x.type==='m'&&x.atk>=1800);
+    case 'fissure':return true;
+    case 'book':return true;
+  }
+}
+async function aiTurn(side){
+  const me=S[side],op=S[other(side)];
+  await sleep(700);
+  let go=true;
+  while(go&&!S.over){
+    go=false;
+    for(let i=0;i<me.hand.length;i++){
+      const c=me.hand[i];
+      if(c.type==='s'&&canCast(side,c)&&aiWants(side,c)){await castSpell(side,i);go=true;break}
+    }
+  }
+  if(S.over)return;
+  await aiSummon(side);
+  if(S.over)return;
+  await aiPositions(side);
+  if(S.turn>1&&!S.over){
+    S.phase='battle';render();log('— Battle Phase —');await sleep(500);
+    await aiBattle(side);
+  }
+  if(!S.over)await endTurn(side);
+}
+async function aiSummon(side){
+  const me=S[side];
+  if(S.summoned)return;
+  const cands=me.hand.map((c,i)=>({c,i})).filter(x=>x.c.type==='m').sort((a,b)=>b.c.atk-a.c.atk);
+  const mine=monsters(side).sort((a,b)=>atkOf(a.m)-atkOf(b.m));
+  const threat=oppThreat(side),oEmpty=monsters(other(side)).length===0;
+  for(const {c,i} of cands){
+    const t=tribNeed(c);
+    if(t>mine.length)continue;
+    const loss=mine.slice(0,t).reduce((s,x)=>s+atkOf(x.m),0);
+    if(t>0&&c.atk-loss<800)continue;
+    if(t===0&&mine.length>=5)continue;
+    const tr=mine.slice(0,t).map(x=>x.i);
+    const set=!(oEmpty||c.atk>=threat||c.atk>=1900)&&!(c.atk>=1700&&c.atk>=c.def);
+    doSummon(side,i,tr,set);render();await sleep(800);return;
+  }
+}
+async function aiPositions(side){
+  const me=S[side],threat=oppThreat(side);
+  for(const {m,i} of monsters(side)){
+    if(!canMove(m))continue;
+    if(m.down&&atkOf(m)>=threat&&atkOf(m)>=1200){changePos(side,i);render();await sleep(600)}
+    else if(!m.down&&m.pos==='def'&&atkOf(m)>=defOf(m)&&atkOf(m)>threat){changePos(side,i);render();await sleep(600)}
+    else if(!m.down&&m.pos==='atk'&&atkOf(m)<threat&&defOf(m)>atkOf(m)+300){changePos(side,i);render();await sleep(600)}
+  }
+}
+async function aiBattle(side){
+  const me=S[side],od=other(side),op=S[od];
+  let again=true;
+  while(again&&!S.over){
+    again=false;
+    const att=monsters(side).filter(x=>canAtk(x.m)).sort((a,b)=>atkOf(b.m)-atkOf(a.m));
+    for(const {m,i} of att){
+      const tg=monsters(od);
+      if(!tg.length){await attack(side,i,null);again=true;break}
+      let best=null,bs=-1e9;const an=atkOf(m);
+      for(const {m:t,i:j} of tg){
+        let sc;
+        if(t.down)sc=an>=1800?50:-100;
+        else if(t.pos==='atk'){const tn=atkOf(t);sc=an>tn?500+(an-tn):an===tn?-50:-1e3}
+        else{const td=defOf(t);sc=an>td?300+t.c.atk/100:-1e3}
+        if(sc>bs){bs=sc;best=j}
+      }
+      if(bs>0){await attack(side,i,best);again=true;break}
+    }
+  }
+}
+
+/* ---------- Khởi động ---------- */
+async function begin(){
+  $('#start').classList.add('hidden');
+  draw('p',5);draw('o',5);
+  const first=Math.random()<0.5?'p':'o';
+  log(`Tung đồng xu: ${first==='p'?'bạn đi trước':'đối thủ đi trước'}. Người đi trước không rút bài và không được đánh ở lượt 1.`);
+  render();toast(first==='p'?'Bạn đi trước!':'Đối thủ đi trước!',1400);
+  await sleep(1200);
+  startTurn(first);
+}
+$('#btnStart').onclick=begin;
+if(AUTO){window.__S=S;begin()}
+render();
+</script>
+</body>
+</html>
