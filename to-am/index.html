@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tổ Ấm Của Chúng Mình</title>
+<style>
+:root{
+  --bg:#fff4ec;--card:#fff;--ink:#4a3328;--muted:#9a8374;--accent:#e8788a;--accent2:#f4a259;
+  --good:#6bbf8a;--line:#f0dccd;--p1:#5b9bd5;--p2:#e8788a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:linear-gradient(180deg,#ffe9dc,#fff4ec 40%);color:var(--ink);
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;min-height:100vh;
+  padding:max(12px,env(safe-area-inset-top)) 14px 40px}
+.wrap{max-width:560px;margin:0 auto}
+h1{font-size:24px;margin:8px 0 2px;text-align:center}
+.sub{text-align:center;color:var(--muted);margin:0 0 14px;font-size:14px}
+.card{background:var(--card);border-radius:18px;padding:14px;box-shadow:0 4px 14px rgba(120,70,40,.08);margin-bottom:12px}
+button{font:inherit;border:0;cursor:pointer;border-radius:12px;padding:11px 14px;background:var(--accent);color:#fff;font-weight:600;
+  transition:transform .08s,opacity .15s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:#fff;color:var(--ink);border:2px solid var(--line)}
+button.big{width:100%;padding:14px;font-size:17px}
+input[type=text]{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:#fffaf6;color:var(--ink)}
+label{font-size:13px;color:var(--muted);display:block;margin:10px 0 4px}
+.perks{display:grid;gap:8px;margin-top:6px}
+.perk{border:2px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;font-size:14px;background:#fffaf6}
+.perk.sel{border-color:var(--accent);background:#ffe9ee}
+.perk b{display:block}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);margin-bottom:8px}
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.res div{background:#fffaf6;border-radius:12px;text-align:center;padding:8px 4px;font-weight:700;font-size:18px}
+.res small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.lovebar{height:10px;background:#f6e3e3;border-radius:6px;margin-top:10px;overflow:hidden}
+.lovebar i{display:block;height:100%;background:linear-gradient(90deg,#f7a1b0,#e8788a);transition:width .4s}
+.house{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{aspect-ratio:1;border-radius:16px;border:2px dashed var(--line);background:#fffaf6;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:4px;cursor:pointer;position:relative;font-size:12px;color:var(--muted)}
+.slot .em{font-size:34px;line-height:1.1}
+.slot.built{border-style:solid;border-color:#f2c9a7;background:linear-gradient(180deg,#fffdf9,#ffeedd);color:var(--ink)}
+.slot.l2{background:linear-gradient(180deg,#fff9ec,#ffe3b8)}
+.slot.l3{background:linear-gradient(180deg,#fff6d6,#ffd98a);border-color:#f0b64d}
+.stars{font-size:11px;letter-spacing:1px;color:#e69a1f}
+.who{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}
+.who h2{margin:0;font-size:18px}
+.ap{margin-left:auto;font-size:20px;letter-spacing:2px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acts button{text-align:left;font-size:14px;padding:10px;background:#fffaf6;color:var(--ink);border:2px solid var(--line)}
+.acts button small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:2px}
+.log{font-size:13px;color:var(--muted);max-height:120px;overflow:auto}
+.log p{margin:3px 0}
+.modal{position:fixed;inset:0;background:rgba(60,35,20,.5);display:none;align-items:flex-end;justify-content:center;z-index:10;padding:12px}
+.modal.show{display:flex}
+.sheet{background:#fff;border-radius:20px;padding:18px;width:100%;max-width:520px;max-height:85vh;overflow:auto;animation:up .2s}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.sheet h3{margin:0 0 6px}
+.sheet .big-em{font-size:46px;text-align:center}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;border:2px solid var(--line);border-radius:12px;margin:8px 0;cursor:pointer;background:#fffaf6}
+.opt.dis{opacity:.45;cursor:not-allowed}
+.opt .nm{font-weight:700}.opt small{color:var(--muted);display:block}
+.cost{font-size:13px;white-space:nowrap}
+.bad{color:#c0504d}
+.float{position:fixed;left:50%;top:18%;transform:translateX(-50%);background:#fff;padding:8px 16px;border-radius:20px;
+  box-shadow:0 6px 20px rgba(0,0,0,.18);font-weight:700;z-index:20;animation:fl 1.4s forwards;pointer-events:none}
+@keyframes fl{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-20px)}}
+.center{text-align:center}
+.score{font-size:46px;font-weight:800;color:var(--accent)}
+.hint{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* ===================== DỮ LIỆU ===================== */
+const ROUNDS = 16;
+const AP_PER_TURN = 2;
+const ROOMS = {
+  khach: {em:'🛋️', name:'Phòng khách', pas:'Dành thời gian bên nhau +1 💗 mỗi cấp'},
+  bep:   {em:'🍳', name:'Gian bếp',    pas:'Mỗi tuần tiết kiệm +5 💰 mỗi cấp'},
+  ngu:   {em:'🛏️', name:'Phòng ngủ',   pas:'Mỗi tuần +1 💗 mỗi cấp'},
+  vuon:  {em:'🌳', name:'Khu vườn',    pas:'Mỗi tuần +1 🪵 mỗi cấp'},
+  be:    {em:'🧸', name:'Phòng em bé', pas:'Cuối game +4 điểm mỗi cấp'},
+  sach:  {em:'📚', name:'Góc đọc sách',pas:'Đi làm +3 💰 mỗi cấp'},
+};
+const COST = [ {c:30,w:3}, {c:50,w:4}, {c:80,w:6} ]; // xây, nâng lv2, nâng lv3
+const PERKS = {
+  khea:  {em:'🔨', name:'Khéo tay',  desc:'Xây & nâng cấp rẻ hơn 20% vật liệu'},
+  chamchi:{em:'💼', name:'Chăm chỉ', desc:'Đi làm kiếm thêm +10 💰'},
+  tinhte:{em:'💞', name:'Tinh tế',   desc:'Hành động tình cảm tặng thêm +3 💗'},
+  nhanh: {em:'🪓', name:'Nhanh nhẹn',desc:'Kiếm vật liệu thêm +1 🪵'},
+};
+const PROMPTS = [
+  'Kể 1 kỷ niệm đẹp nhất của hai người từ lúc quen nhau.',
+  'Nói 3 điều bạn biết ơn ở người ấy trong tuần qua.',
+  'Mỗi người nói ước mơ về căn nhà của mình trong 5 năm tới.',
+  'Cùng nhau chọn tên cho thú cưng/cây cảnh tương lai của nhà mình 🐶🌱',
+  'Khen người ấy một điều mà bạn ít khi nói ra.',
+  'Kể lần bạn thấy người ấy đáng yêu nhất.',
+  'Nếu chỉ có 1 ngày rảnh, hai người sẽ đi đâu, làm gì?',
+  'Nói một điều bạn muốn cả hai cùng cố gắng trong năm tới.',
+  'Ôm nhau 20 giây, rồi nói "Anh/Em yêu em/anh" 💗',
+  'Món ăn nào của người ấy nấu mà bạn nhớ nhất?',
+  'Cùng nhắc lại một câu đùa chỉ hai người hiểu 😆',
+  'Chọn một bài hát "của chúng mình" và hát/ngân nga vài câu 🎵',
+];
+const EVENTS = [
+  {em:'🎉',t:'Được thưởng cuối tuần!',d:'Cả hai nhận thêm 25 💰.',f:s=>{s.coin+=25}},
+  {em:'🌧️',t:'Mưa dột mái nhà',d:'Mất 15 💰 sửa chữa.',f:s=>{s.coin=Math.max(0,s.coin-15)}},
+  {em:'🎁',t:'Ba mẹ gửi quà',d:'Nhận 4 🪵 và +5 💗.',f:s=>{s.wood+=4;s.love=Math.min(100,s.love+5)}},
+  {em:'🐱',t:'Mèo hàng xóm ghé chơi',d:'Cả hai cười vui! +6 💗.',f:s=>{s.love=Math.min(100,s.love+6)}},
+  {em:'📦',t:'Giảm giá vật liệu',d:'Nhặt được 5 🪵 giá rẻ.',f:s=>{s.wood+=5}},
+  {em:'😴',t:'Cả hai hơi mệt',d:'-4 💗, nhớ dành thời gian cho nhau nhé.',f:s=>{s.love=Math.max(0,s.love-4)}},
+  {em:'☀️',t:'Một ngày đẹp trời',d:'+10 💰 và +3 💗.',f:s=>{s.coin+=10;s.love=Math.min(100,s.love+3)}},
+  {em:'🍜',t:'Đi ăn tối bất ngờ',d:'-10 💰 nhưng +8 💗.',f:s=>{s.coin=Math.max(0,s.coin-10);s.love=Math.min(100,s.love+8)}},
+  {em:'🔧',t:'Đồ điện hỏng',d:'Mất 2 🪵 sửa đồ.',f:s=>{s.wood=Math.max(0,s.wood-2)}},
+  {em:'💌',t:'Tin vui từ họ hàng',d:'Mừng tân gia: +30 💰.',f:s=>{s.coin+=30}},
+  {em:'🌈',t:'Cầu vồng sau mưa',d:'Không có gì đặc biệt, chỉ là… đẹp thôi 🌈 (+2 💗).',f:s=>{s.love=Math.min(100,s.love+2)}},
+  {em:'🚲',t:'Dạo phố cuối tuần',d:'+4 💗 và +1 🪵.',f:s=>{s.love=Math.min(100,s.love+4);s.wood+=1}},
+];
+
+/* ===================== TRẠNG THÁI ===================== */
+const KEY='toam_save_v1';
+let S = null;
+const $ = id => document.getElementById(id);
+const cur = () => S.players[S.turn];
+const other = () => S.players[1-S.turn];
+
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){} }
+function load(){ try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null} }
+function clearSave(){ try{localStorage.removeItem(KEY)}catch(e){} }
+
+function newGame(p){
+  S = {
+    round:1, turn:0, ap:AP_PER_TURN, coin:40, wood:4, love:20,
+    slots:Array(6).fill(null), // {type, lv}
+    players:p, log:[], loved:[false,false], ended:false, event:null
+  };
+  startRound(true);
+}
+
+function lvTotal(type){ return S.slots.reduce((a,s)=>a+(s&&s.type===type?s.lv:0),0); }
+function loveBonusWork(){ return S.love>=80?10:S.love>=50?5:0; }
+
+function floatMsg(t){
+  const e=document.createElement('div');e.className='float';e.textContent=t;document.body.appendChild(e);
+  setTimeout(()=>e.remove(),1500);
+}
+function addLog(t){ S.log.unshift(t); if(S.log.length>30)S.log.pop(); }
+
+/* ===================== VÒNG CHƠI ===================== */
+function startRound(first){
+  if(!first){
+    // thu nhập thụ động
+    const b=lvTotal('bep')*5, w=lvTotal('vuon'), l=lvTotal('ngu');
+    S.coin+=b; S.wood+=w; S.love=Math.min(100,S.love+l);
+    S.love=Math.max(0,S.love-2); // tình cảm nhạt dần nếu không vun đắp
+    if(b||w||l) addLog(`🏠 Nhà tự sinh lợi: +${b}💰 +${w}🪵 +${l}💗`);
+  }
+  S.loved=[false,false];
+  const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  ev.f(S); S.event=ev;
+  addLog(`Tuần ${S.round}: ${ev.em} ${ev.t}`);
+  S.turn=0; S.ap=AP_PER_TURN;
+  save(); render();
+  showEvent();
+}
+
+function endTurn(){
+  if(S.turn===0){
+    S.turn=1;S.ap=AP_PER_TURN;save();render();
+    showModal(`<div class="big-em">${S.players[1].avatar}</div><h3 class="center">Đến lượt ${S.players[1].name}!</h3>
+      <p class="center">Đưa điện thoại/máy cho ${S.players[1].name} nhé 💕</p>
+      <button class="big" onclick="closeModal()">Sẵn sàng</button>`);
+  } else {
+    if(S.round>=ROUNDS){ finish(); return; }
+    S.round++; startRound(false);
+  }
+}
+function useAP(n=1){ S.ap-=n; save(); render(); if(S.ap<=0){ setTimeout(()=>{ if(!S.ended&&S.ap<=0) endTurn(); },700);} }
+
+/* ===================== HÀNH ĐỘNG ===================== */
+function actWork(){
+  const p=cur();
+  let g=30+(p.perk==='chamchi'?10:0)+lvTotal('sach')*3+loveBonusWork();
+  S.coin+=g; addLog(`${p.name} đi làm: +${g}💰`); floatMsg(`+${g} 💰`); useAP();
+}
+function actWood(){
+  const p=cur();
+  let g=2+Math.floor(Math.random()*3)+(p.perk==='nhanh'?1:0);
+  S.wood+=g; addLog(`${p.name} kiếm vật liệu: +${g}🪵`); floatMsg(`+${g} 🪵`); useAP();
+}
+function actTogether(){
+  const p=cur();
+  let g=8+lvTotal('khach')+(p.perk==='tinhte'?3:0);
+  if(S.loved[1-S.turn]) g+=4; // cả hai cùng vun đắp trong tuần
+  S.loved[S.turn]=true;
+  S.love=Math.min(100,S.love+g);
+  addLog(`${p.name} dành thời gian cho nhau: +${g}💗`);
+  floatMsg(`+${g} 💗`);
+  S.ap-=1; save(); render();
+  const pr=PROMPTS[Math.floor(Math.random()*PROMPTS.length)];
+  showModal(`<div class="big-em">💞</div><h3 class="center">Thử thách đôi</h3>
+    <p class="center" style="font-size:17px">${pr}</p>
+    <p class="hint">Làm thật nhé – game chỉ là cái cớ để hai người nói chuyện với nhau 😊</p>
+    <button class="big" onclick="closeModal();afterAP()">Xong rồi! 💕</button>`);
+}
+function actGift(){
+  const p=cur();
+  if(S.coin<20){floatMsg('Không đủ 💰');return;}
+  S.coin-=20; const g=12+(p.perk==='tinhte'?3:0);
+  S.love=Math.min(100,S.love+g);
+  const gifts=['một bó hoa 💐','một cốc trà sữa 🧋','một tấm thiệp viết tay 💌','một chiếc bánh nhỏ 🍰'];
+  const gf=gifts[Math.floor(Math.random()*gifts.length)];
+  addLog(`${p.name} tặng ${other().name} ${gf}: +${g}💗`);
+  floatMsg(`+${g} 💗`); S.ap-=1; save(); render();
+  showModal(`<div class="big-em">🎁</div><h3 class="center">Quà cho ${other().name}</h3>
+    <p class="center">${p.name} tặng ${gf}<br>Hãy tặng thật (hoặc hứa tặng) một món quà nhỏ nhé!</p>
+    <button class="big" onclick="closeModal();afterAP()">Thương quá 🥰</button>`);
+}
+function afterAP(){ if(S.ap<=0) endTurn(); }
+
+function matCost(p,lvIdx){ const c=COST[lvIdx]; return {c:c.c, w: Math.max(1, Math.round(c.w*(p.perk==='khea'?0.8:1))) }; }
+
+function openBuild(idx){
+  const slot=S.slots[idx], p=cur();
+  if(S.ap<=0)return;
+  if(!slot){
+    let h=`<h3>Xây phòng mới</h3><p class="hint" style="text-align:left">Chọn loại phòng cho ô này</p>`;
+    const cost=matCost(p,0);
+    const ok=S.coin>=cost.c&&S.wood>=cost.w;
+    const used=new Set(S.slots.filter(Boolean).map(s=>s.type));
+    for(const [k,r] of Object.entries(ROOMS)){
+      const dis=!ok||used.has(k);
+      h+=`<div class="opt ${dis?'dis':''}" ${dis?'':`onclick="build(${idx},'${k}')"`}>
+        <div><span class="nm">${r.em} ${r.name}</span><small>${used.has(k)?'Đã xây rồi':r.pas}</small></div>
+        <div class="cost ${ok?'':'bad'}">${cost.c}💰 ${cost.w}🪵</div></div>`;
+    }
+    h+=`<button class="ghost big" onclick="closeModal()">Đóng</button>`;
+    showModal(h);
+  } else {
+    const r=ROOMS[slot.type];
+    if(slot.lv>=3){
+      showModal(`<div class="big-em">${r.em}</div><h3 class="center">${r.name} – Cấp tối đa ⭐⭐⭐</h3>
+        <p class="center">${r.pas}</p><button class="ghost big" onclick="closeModal()">Đóng</button>`);
+      return;
+    }
+    const cost=matCost(p,slot.lv), ok=S.coin>=cost.c&&S.wood>=cost.w;
+    showModal(`<div class="big-em">${r.em}</div><h3 class="center">${r.name} – Cấp ${slot.lv}</h3>
+      <p class="center">${r.pas}</p>
+      <div class="opt ${ok?'':'dis'}" ${ok?`onclick="upgrade(${idx})"`:''}>
+        <div><span class="nm">Nâng lên cấp ${slot.lv+1}</span><small>Trang trí thêm cho ấm cúng</small></div>
+        <div class="cost ${ok?'':'bad'}">${cost.c}💰 ${cost.w}🪵</div></div>
+      <button class="ghost big" onclick="closeModal()">Đóng</button>`);
+  }
+}
+function build(idx,type){
+  const p=cur(),cost=matCost(p,0);
+  if(S.coin<cost.c||S.wood<cost.w)return;
+  S.coin-=cost.c;S.wood-=cost.w;S.slots[idx]={type,lv:1};
+  addLog(`${p.name} xây ${ROOMS[type].name}`);closeModal();floatMsg(`Xây ${ROOMS[type].name}!`);useAP();
+}
+function upgrade(idx){
+  const p=cur(),s=S.slots[idx],cost=matCost(p,s.lv);
+  if(S.coin<cost.c||S.wood<cost.w)return;
+  S.coin-=cost.c;S.wood-=cost.w;s.lv++;
+  addLog(`${p.name} nâng ${ROOMS[s.type].name} lên cấp ${s.lv}`);closeModal();floatMsg('Nâng cấp! ✨');useAP();
+}
+
+/* ===================== KẾT THÚC ===================== */
+function houseScore(){
+  let pts=0;
+  S.slots.forEach(s=>{ if(s){ pts+=s.lv*10; if(s.type==='be') pts+=s.lv*4; } });
+  return pts;
+}
+function finish(){
+  S.ended=true; save();
+  const h=houseScore(), total=h+S.love;
+  const ranks=[[0,'🏕️ Mái lều nhỏ','Mới bắt đầu thôi, còn cả tương lai phía trước!'],
+    [70,'🏠 Căn nhà nhỏ','Bé nhưng đầy tiếng cười.'],
+    [130,'🏡 Tổ ấm xinh','Ai bước vào cũng muốn ở lại!'],
+    [190,'🏰 Thiên đường của đôi mình','Hạnh phúc đủ đầy, ngọt ngào hết cỡ!']];
+  let rk=ranks[0]; ranks.forEach(r=>{if(total>=r[0])rk=r;});
+  const rooms=S.slots.map(s=>s?ROOMS[s.type].em+'⭐'.repeat(s.lv):'▫️').join(' ');
+  showModal(`<div class="center"><div class="big-em">🎊</div><h3>Hết ${ROUNDS} tuần!</h3>
+    <div class="score">${total}</div><div class="hint">điểm = nhà ${h} + tình cảm ${S.love}</div>
+    <h3 style="margin-top:12px">${rk[1]}</h3><p>${rk[2]}</p><p style="font-size:22px">${rooms}</p>
+    <p>${S.players[0].name} 💕 ${S.players[1].name}</p>
+    <button class="big" onclick="restart()">Chơi lại 🔁</button></div>`);
+}
+function restart(){ clearSave(); closeModal(); S=null; render(); }
+
+/* ===================== GIAO DIỆN ===================== */
+function showModal(html){ $('sheet').innerHTML=html; $('modal').classList.add('show'); }
+function closeModal(){ $('modal').classList.remove('show'); }
+function showEvent(){
+  const e=S.event;
+  showModal(`<div class="big-em">${e.em}</div><h3 class="center">Tuần ${S.round}/${ROUNDS}: ${e.t}</h3>
+    <p class="center">${e.d}</p>
+    <div class="center" style="margin:6px 0 12px"><b style="color:var(--p1)">${S.players[0].avatar} ${S.players[0].name}</b> chơi trước</div>
+    <button class="big" onclick="closeModal()">Bắt đầu tuần mới</button>`);
+}
+
+let setup={perks:['khea','chamchi']};
+function renderSetup(){
+  const perkHtml=(who)=>`<div class="perks">${Object.entries(PERKS).map(([k,p])=>
+    `<div class="perk ${setup.perks[who]===k?'sel':''}" onclick="setup.perks[${who}]='${k}';renderSetup()"><b>${p.em} ${p.name}</b>${p.desc}</div>`).join('')}</div>`;
+  const v0=($('n0')||{}).value||'', v1=($('n1')||{}).value||'';
+  $('app').innerHTML=`
+    <h1>🏡 Tổ Ấm Của Chúng Mình</h1>
+    <p class="sub">Game dành cho hai người – cùng nhau xây tổ ấm trong ${ROUNDS} tuần</p>
+    <div class="card">
+      <div class="who"><div class="avatar" style="background:var(--p1)">🧑</div><h2>Người chơi 1</h2></div>
+      <label>Tên</label><input type="text" id="n0" value="${v0||'Chồng'}" maxlength="14">
+      <label>Chọn năng lực</label>${perkHtml(0)}
+    </div>
+    <div class="card">
+      <div class="who"><div class="avatar" style="background:var(--p2)">👩</div><h2>Người chơi 2</h2></div>
+      <label>Tên</label><input type="text" id="n1" value="${v1||'Vợ'}" maxlength="14">
+      <label>Chọn năng lực</label>${perkHtml(1)}
+    </div>
+    <div class="card" style="font-size:14px;line-height:1.5">
+      <b>Cách chơi</b><br>
+      • Mỗi lượt mỗi người có <b>2 hành động</b>, luân phiên nhau trên cùng một màn hình.<br>
+      • 💼 Đi làm kiếm 💰, 🪓 kiếm 🪵, 🏗️ chạm vào ô để xây/nâng cấp phòng.<br>
+      • 💞 Dành thời gian & 🎁 tặng quà giúp tăng 💗 — tình cảm cao thì đi làm được thưởng thêm, nhưng sẽ nhạt dần nếu không vun đắp!<br>
+      • Cả hai cùng "dành thời gian" trong một tuần → thưởng thêm.<br>
+      • Hết ${ROUNDS} tuần, điểm = độ ấm cúng của nhà + tình cảm.
+    </div>
+    <button class="big" onclick="startGame()">Bắt đầu xây nhà 💕</button>`;
+}
+function startGame(){
+  const n0=$('n0').value.trim()||'Chồng', n1=$('n1').value.trim()||'Vợ';
+  newGame([{name:n0,avatar:'🧑',color:'var(--p1)',perk:setup.perks[0]},{name:n1,avatar:'👩',color:'var(--p2)',perk:setup.perks[1]}]);
+}
+
+function render(){
+  if(!S){ const sv=load(); if(sv&&!sv.ended){ renderContinue(sv); return;} renderSetup(); return; }
+  const p=cur(), pk=PERKS[p.perk];
+  const stars=n=>'⭐'.repeat(n);
+  const slots=S.slots.map((s,i)=>{
+    if(!s) return `<div class="slot" onclick="openBuild(${i})"><div class="em">➕</div>Ô trống</div>`;
+    const r=ROOMS[s.type];
+    return `<div class="slot built l${s.lv}" onclick="openBuild(${i})"><div class="em">${r.em}</div><b>${r.name}</b><div class="stars">${stars(s.lv)}</div></div>`;
+  }).join('');
+  const needB=matCost(p,0);
+  $('app').innerHTML=`
+    <h1>🏡 Tổ Ấm Của Chúng Mình</h1>
+    <div class="top"><span>Tuần <b>${S.round}</b>/${ROUNDS}</span><span>Điểm tạm: <b>${houseScore()+S.love}</b></span>
+      <button class="ghost" style="padding:5px 10px;font-size:12px" onclick="if(confirm('Bỏ ván này và chơi lại?'))restart()">Chơi lại</button></div>
+    <div class="card">
+      <div class="res">
+        <div>💰 ${S.coin}<small>Tiền</small></div>
+        <div>🪵 ${S.wood}<small>Vật liệu</small></div>
+        <div>💗 ${S.love}<small>Tình cảm${S.love>=80?' (+10 đi làm)':S.love>=50?' (+5 đi làm)':''}</small></div>
+      </div>
+      <div class="lovebar"><i style="width:${S.love}%"></i></div>
+    </div>
+    <div class="card"><div class="house">${slots}</div>
+      <div class="hint">Chạm vào ô để xây / nâng cấp (tốn 1 hành động)</div></div>
+    <div class="card">
+      <div class="who">
+        <div class="avatar" style="background:${p.color}">${p.avatar}</div>
+        <div><h2>Lượt của ${p.name}</h2><div style="font-size:12px;color:var(--muted)">${pk.em} ${pk.name}: ${pk.desc}</div></div>
+        <div class="ap">${'⚡'.repeat(S.ap)}${'▫️'.repeat(AP_PER_TURN-S.ap)}</div>
+      </div>
+      <div class="acts">
+        <button onclick="actWork()"><b>💼 Đi làm</b><small>+${30+(p.perk==='chamchi'?10:0)+lvTotal('sach')*3+loveBonusWork()} 💰</small></button>
+        <button onclick="actWood()"><b>🪓 Kiếm vật liệu</b><small>+${2+(p.perk==='nhanh'?1:0)}~${4+(p.perk==='nhanh'?1:0)} 🪵</small></button>
+        <button onclick="actTogether()"><b>💞 Dành thời gian</b><small>+${8+lvTotal('khach')+(p.perk==='tinhte'?3:0)} 💗${S.loved[1-S.turn]?' (+4 thưởng đôi)':''}</small></button>
+        <button onclick="actGift()" ${S.coin<20?'disabled':''}><b>🎁 Tặng quà</b><small>-20 💰 → +${12+(p.perk==='tinhte'?3:0)} 💗</small></button>
+      </div>
+      <button class="ghost big" style="margin-top:10px;font-size:14px" onclick="endTurn()">Kết thúc lượt sớm ⏭️</button>
+    </div>
+    <div class="card"><div class="log">${S.log.slice(0,8).map(l=>`<p>${l}</p>`).join('')}</div></div>
+    <div class="hint">Xây phòng mới: ${needB.c}💰 ${needB.w}🪵 · Tự động lưu trên máy này</div>`;
+  if(S.ap<=0 && !S.ended) {}
+}
+function renderContinue(sv){
+  $('app').innerHTML=`<h1>🏡 Tổ Ấm Của Chúng Mình</h1><p class="sub">Có ván đang chơi dở</p>
+    <div class="card center"><p>${sv.players[0].name} 💕 ${sv.players[1].name}<br>Tuần ${sv.round}/${ROUNDS}</p>
+    <button class="big" onclick="S=load();render()">Chơi tiếp ▶️</button>
+    <button class="ghost big" style="margin-top:8px" onclick="clearSave();render()">Ván mới</button></div>`;
+}
+render();
+</script>
+</body>
+</html>
