@@ -20,6 +20,17 @@ h1{margin:6px 0;font-size:clamp(28px,6vw,48px);text-align:center}
 #menu .b2{background:#80ed99;box-shadow:0 5px 0 #4aa862;color:#245}
 #menu .b3{background:#ffb703;box-shadow:0 5px 0 #c98600}
 #stage{flex:1;width:100%;max-width:640px;position:relative;overflow:hidden;border-radius:24px;background:rgba(255,255,255,.55)}
+
+/* puzzle */
+#pz{height:100%;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px}
+#pzbar{display:flex;gap:10px;align-items:center;font-size:20px}
+#board{position:relative;flex:1;min-height:0;aspect-ratio:1;max-width:100%;display:grid;gap:3px;background:#fff;padding:3px;border-radius:14px}
+.pc{border:3px solid transparent;border-radius:6px;background-repeat:no-repeat;cursor:pointer;padding:0}
+.pc.sel{border-color:#ff8fab;transform:scale(.93)}
+.pc.fix{border-color:#2fb36d}
+#peek{position:absolute;inset:0;background-size:100% 100%;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s}
+#peek.on{opacity:1}
+#menu .b4{background:#c77dff;box-shadow:0 5px 0 #8a4fc0;color:#fff}
 .hidden{display:none!important}
 /* memory */
 #grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;height:100%;align-content:center}
@@ -53,6 +64,7 @@ h1{margin:6px 0;font-size:clamp(28px,6vw,48px);text-align:center}
     <button class="btn b1" data-g="memory">🐶 Tìm đôi con vật</button>
     <button class="btn b2" data-g="balloon">🎈 Bắn bóng bay</button>
     <button class="btn b3" data-g="count">🍎 Bé tập đếm</button>
+    <button class="btn b4" data-g="puzzle">🧩 Xếp tranh</button>
   </div>
   <div id="play" class="hidden" style="width:100%;max-width:640px;flex:1;display:flex;flex-direction:column">
     <div class="bar">
@@ -85,7 +97,7 @@ $('#back').onclick=()=>{clearStage();$('#play').classList.add('hidden');$('#menu
 $('#again').onclick=()=>start(game);
 function start(g){game=g;score=0;$('#score').textContent=0;
  $('#menu').classList.add('hidden');$('#play').classList.remove('hidden');clearStage();
- ({memory,balloon,count})[g]()}
+ ({memory,balloon,count,puzzle})[g]()}
 
 /* 1. Tìm đôi */
 function memory(){
@@ -120,6 +132,56 @@ function balloon(){
    if(c===goal){good();addScore();b.remove();pick();if(score%5==0)sayM('⭐ Tuyệt vời! ⭐')}
    else{bad();b.style.opacity=.4}};
   b.onanimationend=()=>b.remove();stage.appendChild(b)},900);
+}
+
+
+/* 4. Xếp tranh nhiều cấp độ */
+function puzzle(){
+ const levels=[[2,2],[2,3],[3,3],[3,4],[4,4],[5,5]];
+ const scenes=[
+  ['#8ee3ff','#c8f7a0',['🌞',.8,.2,.4],['☁️',.25,.2,.25],['🌳',.2,.7,.4],['🏠',.6,.7,.4]],
+  ['#4cc9f0','#1b6ca8',['🐠',.3,.4,.3],['🐙',.7,.65,.3],['🐢',.25,.8,.25],['🦀',.75,.88,.2],['🫧',.6,.2,.2]],
+  ['#ffd6a5','#a7e27a',['🏡',.5,.55,.55],['🌻',.15,.8,.25],['🌳',.85,.6,.4],['🦋',.25,.3,.2],['☀️',.8,.15,.3]],
+  ['#14134d','#4b3a7a',['🚀',.5,.5,.5],['🌙',.8,.18,.3],['⭐',.2,.2,.18],['🪐',.2,.75,.3],['👽',.82,.8,.25],['✨',.55,.15,.15]],
+  ['#ffc8dd','#b8f2e6',['🦄',.5,.55,.55],['🌈',.5,.2,.45],['🌸',.15,.8,.22],['🍭',.85,.78,.22],['🦋',.82,.35,.2]],
+  ['#ffe066','#ff8fab',['🎪',.5,.5,.45],['🎈',.15,.25,.25],['🎠',.8,.75,.3],['🤡',.2,.78,.25],['🎡',.85,.25,.3],['🍿',.5,.85,.2]]];
+ let lv=0;
+ const wrap=document.createElement('div');wrap.id='pz';stage.prepend(wrap);
+ function art(i){
+  const c=document.createElement('canvas');c.width=c.height=600;const x=c.getContext('2d');
+  const sc=scenes[i],g=x.createLinearGradient(0,0,0,600);g.addColorStop(0,sc[0]);g.addColorStop(1,sc[1]);
+  x.fillStyle=g;x.fillRect(0,0,600,600);x.textAlign='center';x.textBaseline='middle';
+  sc.slice(2).forEach(([e,px,py,s])=>{x.font=(s*600)+'px serif';x.fillText(e,px*600,py*600)});
+  return c.toDataURL()}
+ function build(){
+  const [r,cn]=levels[lv],n=r*cn,img=art(lv);
+  wrap.innerHTML='<div id="pzbar"><b>Cấp '+(lv+1)+'/'+levels.length+'</b><button class="btn sm" id="hint">👀 Xem ảnh mẫu</button></div><div id="board"></div>';
+  const board=wrap.querySelector('#board');
+  board.style.gridTemplateColumns='repeat('+cn+',1fr)';board.style.gridTemplateRows='repeat('+r+',1fr)';
+  const peek=document.createElement('div');peek.id='peek';peek.style.backgroundImage='url('+img+')';
+  wrap.querySelector('#hint').onclick=()=>{peek.classList.add('on');setTimeout(()=>peek.classList.remove('on'),1800)};
+  let order=[...Array(n).keys()];
+  do{order=shuffle(order)}while(order.every((v,i)=>v===i));
+  let sel=null;
+  const els=[];
+  const paint=()=>els.forEach((b,i)=>{const p=order[i],px=p%cn,py=(p/cn)|0;
+   b.style.backgroundImage='url('+img+')';b.style.backgroundSize=(cn*100)+'% '+(r*100)+'%';
+   b.style.backgroundPosition=(px/(cn-1)*100)+'% '+(py/(r-1)*100)+'%';
+   b.classList.toggle('fix',p===i);b.classList.toggle('sel',sel===i)});
+  for(let i=0;i<n;i++){const b=document.createElement('button');b.className='pc';
+   b.onclick=()=>{
+    if(order[i]===i)return;
+    if(sel===null){sel=i;beep(500)}
+    else if(sel===i){sel=null}
+    else{[order[sel],order[i]]=[order[i],order[sel]];sel=null;beep(600);
+     if(order.every((v,k)=>v===k)){paint();good();addScore(lv+1);
+      sayM(lv<levels.length-1?'🎉 Giỏi quá!':'🏆 Bé thắng hết rồi!');
+      setTimeout(()=>{lv=(lv+1)%levels.length;build()},1600);return}}
+    paint()};
+   els.push(b);board.appendChild(b)}
+  board.appendChild(peek);paint();
+ }
+ build();
 }
 
 /* 3. Tập đếm */
