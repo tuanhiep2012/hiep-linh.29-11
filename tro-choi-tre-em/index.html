@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Bé Học Vui</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;font-family:"Comic Sans MS","Baloo 2",system-ui,sans-serif;background:linear-gradient(#bde9ff,#fff5c9);color:#3a2e6b;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px}
+h1{margin:6px 0;font-size:clamp(28px,6vw,48px);text-align:center}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;width:100%;max-width:640px;margin-bottom:8px}
+.btn{border:0;border-radius:20px;padding:14px 22px;font:inherit;font-size:22px;background:#ff8fab;color:#fff;box-shadow:0 5px 0 #d6527a;cursor:pointer}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #d6527a}
+.btn.sm{padding:8px 14px;font-size:18px}
+.score{font-size:24px;background:#fff;border-radius:16px;padding:6px 14px}
+#menu{display:grid;gap:18px;margin-top:20px;width:100%;max-width:420px}
+#menu .btn{font-size:28px;padding:22px}
+#menu .b1{background:#4cc9f0;box-shadow:0 5px 0 #2a8fb0}
+#menu .b2{background:#80ed99;box-shadow:0 5px 0 #4aa862;color:#245}
+#menu .b3{background:#ffb703;box-shadow:0 5px 0 #c98600}
+#stage{flex:1;width:100%;max-width:640px;position:relative;overflow:hidden;border-radius:24px;background:rgba(255,255,255,.55)}
+.hidden{display:none!important}
+/* memory */
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;height:100%;align-content:center}
+.card{aspect-ratio:1;perspective:600px;border:0;background:none;padding:0}
+.card i{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:18px;font-style:normal;font-size:clamp(34px,10vw,64px);background:#ffd166;box-shadow:0 4px 0 #d9a21b;transition:transform .35s;transform-style:preserve-3d}
+.card.up i{background:#fff;transform:rotateY(0)}
+.card:not(.up) i{color:transparent}
+.card:not(.up) i::after{content:"❓";color:#fff;position:absolute;font-size:.7em}
+.card{position:relative}
+.card.ok i{background:#b7f5c6;animation:pop .5s}
+@keyframes pop{50%{transform:scale(1.2)}}
+/* balloons */
+.balloon{position:absolute;bottom:-90px;width:70px;height:88px;border-radius:50% 50% 48% 48%;display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;font-weight:bold;cursor:pointer;animation:rise linear forwards;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.balloon::after{content:"";position:absolute;bottom:-18px;left:50%;width:2px;height:18px;background:#999}
+@keyframes rise{to{transform:translateY(-120vh)}}
+#target{font-size:26px;text-align:center;padding:6px}
+/* counting */
+#count{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:18px;padding:12px}
+#things{font-size:clamp(34px,9vw,56px);text-align:center;line-height:1.3;min-height:150px}
+#choices{display:flex;gap:14px}
+#choices .btn{font-size:40px;min-width:80px;background:#4cc9f0;box-shadow:0 5px 0 #2a8fb0}
+#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(40px,12vw,80px);pointer-events:none;text-align:center}
+.yay{animation:yay 1s forwards}
+@keyframes yay{0%{transform:scale(.3);opacity:0}30%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:0}}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>🌈 Bé Học Vui 🌈</h1>
+  <div id="menu">
+    <button class="btn b1" data-g="memory">🐶 Tìm đôi con vật</button>
+    <button class="btn b2" data-g="balloon">🎈 Bắn bóng bay</button>
+    <button class="btn b3" data-g="count">🍎 Bé tập đếm</button>
+  </div>
+  <div id="play" class="hidden" style="width:100%;max-width:640px;flex:1;display:flex;flex-direction:column">
+    <div class="bar">
+      <button class="btn sm" id="back">🏠 Về nhà</button>
+      <div class="score">⭐ <span id="score">0</span></div>
+      <button class="btn sm" id="again">🔄 Chơi lại</button>
+    </div>
+    <div id="stage"><div id="msg"></div></div>
+  </div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const stage=$('#stage'),msg=$('#msg');
+let score=0,game=null,timer=null;
+let ac;
+function beep(f=600,d=.15,t='sine'){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+ const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=.15;
+ o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.stop(ac.currentTime+d)}catch(e){}}
+function good(){beep(660);setTimeout(()=>beep(880),90)}
+function bad(){beep(200,.25,'square')}
+function say(t){msg.textContent=t;msg.classList.remove('yay');void msg.offsetWidth;msg.classList.add('yay')}
+function addScore(n=1){score+=n;$('#score').textContent=score}
+function clearStage(){clearInterval(timer);stage.innerHTML='<div id="msg"></div>';window.msg=stage.firstChild}
+function getMsg(){return stage.querySelector('#msg')}
+function sayM(t){const m=getMsg();m.textContent=t;m.classList.remove('yay');void m.offsetWidth;m.classList.add('yay')}
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+
+document.querySelectorAll('#menu .btn').forEach(b=>b.onclick=()=>start(b.dataset.g));
+$('#back').onclick=()=>{clearStage();$('#play').classList.add('hidden');$('#menu').classList.remove('hidden')};
+$('#again').onclick=()=>start(game);
+function start(g){game=g;score=0;$('#score').textContent=0;
+ $('#menu').classList.add('hidden');$('#play').classList.remove('hidden');clearStage();
+ ({memory,balloon,count})[g]()}
+
+/* 1. Tìm đôi */
+function memory(){
+ const pool=shuffle(['🐶','🐱','🐰','🐼','🦁','🐸','🐵','🐷']).slice(0,6);
+ const grid=document.createElement('div');grid.id='grid';stage.prepend(grid);
+ let open=[],lock=false,found=0;
+ shuffle([...pool,...pool]).forEach(e=>{
+  const c=document.createElement('button');c.className='card';c.innerHTML='<i>'+e+'</i>';c.dataset.e=e;
+  c.onclick=()=>{
+   if(lock||c.classList.contains('up'))return;
+   c.classList.add('up');beep(500);open.push(c);
+   if(open.length==2){
+    const [a,b]=open;open=[];
+    if(a.dataset.e===b.dataset.e){good();a.classList.add('ok');b.classList.add('ok');addScore(2);
+     if(++found==pool.length)sayM('🎉 Giỏi quá! 🎉')}
+    else{lock=true;bad();setTimeout(()=>{a.classList.remove('up');b.classList.remove('up');lock=false},800)}
+   }};
+  grid.appendChild(c)});
+}
+
+/* 2. Bắn bóng bay */
+function balloon(){
+ const cols=[['đỏ','#ef476f'],['vàng','#e9b800'],['xanh dương','#118ab2'],['xanh lá','#2fb36d'],['tím','#8e6bd1']];
+ const t=document.createElement('div');t.id='target';stage.prepend(t);
+ let goal;const pick=()=>{goal=cols[Math.random()*cols.length|0];t.innerHTML='Hãy chọn bóng màu <b style="color:'+goal[1]+'">'+goal[0]+'</b>!'};
+ pick();
+ timer=setInterval(()=>{
+  const c=cols[Math.random()*cols.length|0],b=document.createElement('div');
+  b.className='balloon';b.style.background=c[1];b.style.left=Math.random()*(stage.clientWidth-80)+'px';
+  b.style.animationDuration=(5+Math.random()*3)+'s';b.textContent='🎈'.length&&'';
+  b.onpointerdown=()=>{
+   if(c===goal){good();addScore();b.remove();pick();if(score%5==0)sayM('⭐ Tuyệt vời! ⭐')}
+   else{bad();b.style.opacity=.4}};
+  b.onanimationend=()=>b.remove();stage.appendChild(b)},900);
+}
+
+/* 3. Tập đếm */
+function count(){
+ const icons=['🍎','🍌','⭐','🐟','🌸','🚗','🐥','🍓'];
+ const box=document.createElement('div');box.id='count';stage.prepend(box);
+ function round(){
+  const n=1+Math.random()*9|0,ic=icons[Math.random()*icons.length|0];
+  let opts=new Set([n]);while(opts.size<3)opts.add(Math.max(1,Math.min(10,n+(Math.random()*5|0)-2)));
+  box.innerHTML='<div style="font-size:26px">Có bao nhiêu con/quả/cái?</div><div id="things">'+ic.repeat(n)+'</div><div id="choices"></div>';
+  shuffle([...opts]).forEach(v=>{const b=document.createElement('button');b.className='btn';b.textContent=v;
+   b.onclick=()=>{if(v===n){good();addScore();sayM('🎉 Đúng rồi!');setTimeout(round,900)}else{bad();b.style.opacity=.35}};
+   box.querySelector('#choices').appendChild(b)});
+ }
+ round();
+}
+</script>
+</body>
+</html>
