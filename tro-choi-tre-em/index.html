@@ -25,7 +25,7 @@ h1{margin:6px 0;font-size:clamp(28px,6vw,48px);text-align:center}
 #pz{height:100%;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px}
 #pzbar{display:flex;gap:10px;align-items:center;font-size:20px}
 #board{position:relative;flex:1;min-height:0;aspect-ratio:1;max-width:100%;display:grid;gap:3px;background:#fff;padding:3px;border-radius:14px}
-.pc{border:3px solid transparent;border-radius:6px;background-repeat:no-repeat;cursor:pointer;padding:0}
+.pc{border:2px solid transparent;border-radius:4px;transition:transform .15s;background-repeat:no-repeat;cursor:pointer;padding:0}
 .pc.sel{border-color:#ff8fab;transform:scale(.93)}
 .pc.fix{border-color:#2fb36d}
 #peek{position:absolute;inset:0;background-size:100% 100%;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -137,47 +137,59 @@ function balloon(){
 
 /* 4. Xếp tranh nhiều cấp độ */
 function puzzle(){
- const levels=[[2,2],[2,3],[3,3],[3,4],[4,4],[5,5]];
- const scenes=[
-  ['#8ee3ff','#c8f7a0',['🌞',.8,.2,.4],['☁️',.25,.2,.25],['🌳',.2,.7,.4],['🏠',.6,.7,.4]],
-  ['#4cc9f0','#1b6ca8',['🐠',.3,.4,.3],['🐙',.7,.65,.3],['🐢',.25,.8,.25],['🦀',.75,.88,.2],['🫧',.6,.2,.2]],
-  ['#ffd6a5','#a7e27a',['🏡',.5,.55,.55],['🌻',.15,.8,.25],['🌳',.85,.6,.4],['🦋',.25,.3,.2],['☀️',.8,.15,.3]],
-  ['#14134d','#4b3a7a',['🚀',.5,.5,.5],['🌙',.8,.18,.3],['⭐',.2,.2,.18],['🪐',.2,.75,.3],['👽',.82,.8,.25],['✨',.55,.15,.15]],
-  ['#ffc8dd','#b8f2e6',['🦄',.5,.55,.55],['🌈',.5,.2,.45],['🌸',.15,.8,.22],['🍭',.85,.78,.22],['🦋',.82,.35,.2]],
-  ['#ffe066','#ff8fab',['🎪',.5,.5,.45],['🎈',.15,.25,.25],['🎠',.8,.75,.3],['🤡',.2,.78,.25],['🎡',.85,.25,.3],['🍿',.5,.85,.2]]];
+ // [số ô mỗi cạnh, xoay mảnh, hiện viền xanh mảnh đúng, lượt xem ảnh mẫu]
+ const levels=[[3,0,1,3],[4,0,1,3],[4,1,1,2],[5,1,1,2],[5,1,0,1],[6,1,1,1],[6,1,0,1],[7,1,0,1],[8,1,0,1],[9,1,0,1]];
+ const themes=[
+  ['#8ee3ff','#c8f7a0','🌞','🌳','🏠','🌻','🦋','☁️','🐝','🍎','🐞','🌷'],
+  ['#4cc9f0','#1b6ca8','🐠','🐙','🐢','🦀','🫧','🐬','🐚','🦑','🐡','⭐'],
+  ['#ffd6a5','#a7e27a','🐄','🐖','🐔','🚜','🌽','🐑','🥕','🐴','🌾','🍓'],
+  ['#14134d','#4b3a7a','🚀','🌙','⭐','🪐','👽','✨','☄️','🛸','🌟','🛰️'],
+  ['#ffc8dd','#b8f2e6','🦄','🌈','🌸','🍭','🦋','🧁','🍬','🎀','🍩','💖'],
+  ['#ffe066','#ff8fab','🎪','🎈','🎠','🤡','🎡','🍿','🎁','🎉','🎯','🎵'],
+  ['#d8f3dc','#40916c','🦁','🐘','🦒','🦓','🐒','🐊','🦜','🐆','🦏','🌴'],
+  ['#caf0f8','#90e0ef','🐧','🐻‍❄️','🦭','❄️','⛄','🧊','🐳','🎿','🧣','🌨️'],
+  ['#fff1c9','#f4a261','🍕','🍔','🍟','🍦','🍉','🍪','🥐','🍇','🍌','🧀'],
+  ['#e0c3fc','#8ec5fc','🦖','🌋','🥚','🦕','🌿','🦴','🪨','🐲','🔥','🌴']];
  let lv=0;
  const wrap=document.createElement('div');wrap.id='pz';stage.prepend(wrap);
+ function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
  function art(i){
-  const c=document.createElement('canvas');c.width=c.height=600;const x=c.getContext('2d');
-  const sc=scenes[i],g=x.createLinearGradient(0,0,0,600);g.addColorStop(0,sc[0]);g.addColorStop(1,sc[1]);
-  x.fillStyle=g;x.fillRect(0,0,600,600);x.textAlign='center';x.textBaseline='middle';
-  sc.slice(2).forEach(([e,px,py,s])=>{x.font=(s*600)+'px serif';x.fillText(e,px*600,py*600)});
+  const c=document.createElement('canvas');c.width=c.height=720;const x=c.getContext('2d');
+  const th=themes[i],g=x.createLinearGradient(0,0,0,720);g.addColorStop(0,th[0]);g.addColorStop(1,th[1]);
+  x.fillStyle=g;x.fillRect(0,0,720,720);x.textAlign='center';x.textBaseline='middle';
+  const R=rng(i*97+13),count=14+i*9;
+  for(let k=0;k<count;k++){const e=th[2+(k%10)],s=(k<3?.34:.11+R()*.14)*720;
+   x.font=s+'px serif';x.fillText(e,(.08+R()*.84)*720,(.08+R()*.84)*720)}
   return c.toDataURL()}
  function build(){
-  const [r,cn]=levels[lv],n=r*cn,img=art(lv);
-  wrap.innerHTML='<div id="pzbar"><b>Cấp '+(lv+1)+'/'+levels.length+'</b><button class="btn sm" id="hint">👀 Xem ảnh mẫu</button></div><div id="board"></div>';
-  const board=wrap.querySelector('#board');
-  board.style.gridTemplateColumns='repeat('+cn+',1fr)';board.style.gridTemplateRows='repeat('+r+',1fr)';
+  const [n,rot,lock,hints]=levels[lv],total=n*n,img=art(lv);let left=hints;
+  wrap.innerHTML='<div id="pzbar"><b>Cấp '+(lv+1)+'/'+levels.length+'</b><button class="btn sm" id="hint"></button></div>'
+   +'<div style="font-size:15px;text-align:center">Chạm 2 mảnh để đổi chỗ'+(rot?' · chạm lại mảnh đang chọn để xoay':'')+'</div><div id="board"></div>';
+  const board=wrap.querySelector('#board'),hb=wrap.querySelector('#hint');
+  board.style.gridTemplateColumns='repeat('+n+',1fr)';board.style.gridTemplateRows='repeat('+n+',1fr)';
   const peek=document.createElement('div');peek.id='peek';peek.style.backgroundImage='url('+img+')';
-  wrap.querySelector('#hint').onclick=()=>{peek.classList.add('on');setTimeout(()=>peek.classList.remove('on'),1800)};
-  let order=[...Array(n).keys()];
-  do{order=shuffle(order)}while(order.every((v,i)=>v===i));
-  let sel=null;
+  const hl=()=>{hb.textContent='👀 Ảnh mẫu ('+left+')';hb.disabled=left<1;hb.style.opacity=left<1?.4:1};hl();
+  hb.onclick=()=>{if(left<1)return;left--;hl();peek.classList.add('on');setTimeout(()=>peek.classList.remove('on'),1500)};
+  let order,rots,sel=null;
+  const ok=()=>order.every((v,k)=>v===k&&rots[k]===0);
+  do{order=shuffle([...Array(total).keys()]);rots=order.map(()=>rot?Math.random()*4|0:0)}while(ok());
   const els=[];
-  const paint=()=>els.forEach((b,i)=>{const p=order[i],px=p%cn,py=(p/cn)|0;
-   b.style.backgroundImage='url('+img+')';b.style.backgroundSize=(cn*100)+'% '+(r*100)+'%';
-   b.style.backgroundPosition=(px/(cn-1)*100)+'% '+(py/(r-1)*100)+'%';
-   b.classList.toggle('fix',p===i);b.classList.toggle('sel',sel===i)});
-  for(let i=0;i<n;i++){const b=document.createElement('button');b.className='pc';
+  const fixed=i=>lock&&order[i]===i&&rots[i]===0;
+  const paint=()=>els.forEach((b,i)=>{const p=order[i],px=p%n,py=(p/n)|0;
+   b.style.backgroundImage='url('+img+')';b.style.backgroundSize=(n*100)+'% '+(n*100)+'%';
+   b.style.backgroundPosition=(px/(n-1)*100)+'% '+(py/(n-1)*100)+'%';
+   b.style.transform='rotate('+rots[i]*90+'deg)'+(sel===i?' scale(.9)':'');
+   b.classList.toggle('fix',fixed(i));b.classList.toggle('sel',sel===i)});
+  for(let i=0;i<total;i++){const b=document.createElement('button');b.className='pc';
    b.onclick=()=>{
-    if(order[i]===i)return;
+    if(fixed(i))return;
     if(sel===null){sel=i;beep(500)}
-    else if(sel===i){sel=null}
-    else{[order[sel],order[i]]=[order[i],order[sel]];sel=null;beep(600);
-     if(order.every((v,k)=>v===k)){paint();good();addScore(lv+1);
-      sayM(lv<levels.length-1?'🎉 Giỏi quá!':'🏆 Bé thắng hết rồi!');
-      setTimeout(()=>{lv=(lv+1)%levels.length;build()},1600);return}}
-    paint()};
+    else if(sel===i){if(rot){rots[i]=(rots[i]+1)%4;beep(420)}sel=rot?i:null}
+    else if(fixed(sel)){sel=i}
+    else{[order[sel],order[i]]=[order[i],order[sel]];[rots[sel],rots[i]]=[rots[i],rots[sel]];sel=null;beep(600)}
+    paint();
+    if(ok()){good();addScore(lv+1);sayM(lv<levels.length-1?'🎉 Giỏi quá!':'🏆 Bé thắng hết rồi!');
+     setTimeout(()=>{lv=(lv+1)%levels.length;build()},1600)}};
    els.push(b);board.appendChild(b)}
   board.appendChild(peek);paint();
  }
